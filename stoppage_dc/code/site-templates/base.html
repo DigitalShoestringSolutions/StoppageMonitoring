@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load static %}
+    {% get_static_prefix as STATIC_PREFIX %}
+    <title>Shoestring Job Tracker</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    {% block css %} {% endblock css %}
+<!--    <link rel="stylesheet" href="{{STATIC_PREFIX}}css/base.css">-->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
+
+</head>
+<body>
+<!-- Navbar -->
+<!--<div class="topnav">-->
+<!--    <img class="logo" src="{{STATIC_PREFIX}}assets/Logo.jpeg" alt="Logo">-->
+    {% block navbar %} {% endblock navbar %}
+<!--</div>-->
+
+{% block content %} {% endblock content %}
+
+{% block footer %} {% endblock footer %}
+<!-- Header -->
+<header class="header">
+
+</header>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-u1OknCvxWvY5kfmNBILK2hRnQC3Pr17a+RTT6rIHI7NnikvbZlHgTPOOmMi466C8"
+        crossorigin="anonymous"></script>
+{% block script %} {% endblock script %}
+</body>
+</html>

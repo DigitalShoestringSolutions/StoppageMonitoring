@@ -1,16 +1,11 @@
 FROM node:19-alpine AS appbuild
-COPY ./code/fault_monitoring/react/package.json /
+COPY ./code/package.json /
 RUN npm install
 RUN npm -v
-COPY ./code/fault_monitoring/react/ /
+COPY ./code /
 RUN npm run build
 
-FROM digitalshoestring/shoestring-django:v0.0.1
-ENV PYTHONUNBUFFERED 1
-COPY ./requirements.txt /requirements.txt
-RUN pip install -r /requirements.txt && rm -f /requirements.txt
-WORKDIR /app
-ADD ./code /app/
-COPY --from=appbuild /build /app/static
-COPY --from=appbuild /build /app/fault_monitoring/static
-COPY --from=appbuild /build/index.html /app/fault_monitoring/templates/index.html
+FROM nginx
+COPY --from=appbuild /build /usr/share/nginx/html
+COPY ./config/nginx/nginx.conf /etc/nginx/nginx.conf
+COPY ./config/nginx/default.conf /etc/nginx/conf.d/default.conf

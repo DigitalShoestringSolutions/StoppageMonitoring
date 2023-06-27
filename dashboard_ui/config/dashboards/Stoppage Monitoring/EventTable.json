@@ -24,7 +24,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 3,
+  "id": 2,
   "links": [
     {
       "asDropdown": false,
@@ -53,7 +53,9 @@
           },
           "custom": {
             "align": "auto",
-            "displayMode": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
             "inspect": false
           },
           "mappings": [],
@@ -82,6 +84,7 @@
       "id": 2,
       "options": {
         "footer": {
+          "countRows": false,
           "fields": "",
           "reducer": [
             "sum"
@@ -96,7 +99,7 @@
           }
         ]
       },
-      "pluginVersion": "9.1.1",
+      "pluginVersion": "9.4.7",
       "targets": [
         {
           "datasource": {
@@ -110,21 +113,19 @@
       "title": "Events",
       "transformations": [
         {
-          "id": "organize",
+          "id": "renameByRegex",
           "options": {
-            "excludeByName": {},
-            "indexByName": {},
-            "renameByName": {
-              "status 1": "Status"
-            }
+            "regex": "status (.*)",
+            "renamePattern": "$1"
           }
         }
       ],
       "type": "table"
     }
   ],
-  "refresh": false,
-  "schemaVersion": 37,
+  "refresh": "",
+  "revision": 1,
+  "schemaVersion": 38,
   "style": "dark",
   "tags": [],
   "templating": {
@@ -162,6 +163,6 @@
   "timezone": "",
   "title": "Event List",
   "uid": "kNxFI6H4z",
-  "version": 10,
+  "version": 2,
   "weekStart": ""
 }

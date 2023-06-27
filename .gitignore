@@ -1,4 +1,5 @@
 **/data/*
+**/lstart.sh
 **__pycache__
 !**/.gitkeep
 **/django_secret_key

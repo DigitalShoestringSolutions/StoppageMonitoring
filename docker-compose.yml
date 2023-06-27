@@ -16,8 +16,37 @@ services:
         restart: unless-stopped
         depends_on:
             - "timeseries-db"
+            - "reasons-sds"
+    reasons-sds:
+        extends:
+            file: reasons_sds/app.yml
+            service: app
+        networks:
+            internal:
+                aliases:
+                    - reasons-sds.docker.local
+        logging:
+                driver: syslog
+                options:
+                        tag: docker-reasons-sds
+        restart: unless-stopped
         env_file:
             - django_secret_key 
+
+    reason-events:
+        extends:
+            file: auto_reason_control_sm/app.yml
+            service: app
+        networks:
+            internal:
+                aliases:
+                    - reason-events.docker.local
+        logging:
+                driver: syslog
+                options:
+                        tag: docker-reason-events
+        restart: unless-stopped
+ 
     timeseries-db:
         extends:
             file: timeseries_sds/app.yml

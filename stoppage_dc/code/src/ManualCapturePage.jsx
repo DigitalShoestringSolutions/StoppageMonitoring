@@ -31,7 +31,7 @@ export function CapturePage({ config, machine_list }) {
   React.useEffect(() => {
     let do_load = async () => {
       setPending(true)
-      let url = config.reasons_api.host + (config.reasons_api.port ? ":" + config.reasons_api.port : "")
+      let url = (config.reasons_api.host ? config.reasons_api.host : window.location.hostname) + (config.reasons_api.port ? ":" + config.reasons_api.port : "")
       let response = await APIBackend.api_get('http://' + url + '/reasons/' + machine_id);
       if (response.status === 200) {
         let raw_reasons = response.payload;

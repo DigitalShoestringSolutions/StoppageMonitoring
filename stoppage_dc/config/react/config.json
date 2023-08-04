@@ -14,11 +14,11 @@
     "event_log_length": 5
   },
   "reasons_api": {
-    "host": "192.168.56.110",
+    "host": null,
     "port": 8001
   },
   "mqtt": {
-    "host": "localhost",
+    "host": null,
     "port": 9001,
     "prefix": [
     ]

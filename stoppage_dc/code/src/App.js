@@ -47,7 +47,7 @@ function App() {
   } else {
     return (
       <MQTTProvider
-        host={config?.mqtt?.host ?? document.location.hostname}
+        host={config?.mqtt?.host ?? window.location.hostname}
         port={config?.mqtt?.port ?? 9001}
         prefix={config?.mqtt?.prefix ?? []}
         new_message_action={new_message_action}
@@ -97,7 +97,7 @@ function Base({ setMachineList, config }) {
   React.useEffect(() => {
     let do_load = async () => {
       setPending(true)
-      let url = config.reasons_api.host + (config.reasons_api.port ? ":" + config.reasons_api.port : "")
+      let url = (config.reasons_api.host ? config.reasons_api.host : window.location.hostname) + (config.reasons_api.port ? ":" + config.reasons_api.port : "")
       let response = await APIBackend.api_get('http://' + url + '/machines/');
       if (response.status === 200) {
         setMachineList(response.payload)

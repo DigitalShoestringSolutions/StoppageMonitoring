@@ -35,7 +35,7 @@ export function AutoPage({ config, machine_list }) {
   React.useEffect(() => {
     let do_load = async () => {
       setPending(true)
-      let url = config.reasons_api.host + (config.reasons_api.port ? ":" + config.reasons_api.port : "")
+      let url = (config.reasons_api.host ? config.reasons_api.host : window.location.hostname) + (config.reasons_api.port ? ":" + config.reasons_api.port : "")
       let response = await APIBackend.api_get('http://' + url + '/reasons/' + machine_id);
       if (response.status === 200) {
         let raw_reasons = response.payload;
@@ -55,7 +55,7 @@ export function AutoPage({ config, machine_list }) {
   React.useEffect(() => {
     if (!subscribed) {
       subscribe("equipment_monitoring/status/" + machine.name)
-      subscribe("event_sm/" + machine.name+"/#")
+      subscribe("event_sm/" + machine.name + "/#")
       subscribe("status/" + machine.name + "/alive")
       setSubscribed(true)
     }
@@ -64,15 +64,15 @@ export function AutoPage({ config, machine_list }) {
   React.useEffect(() => {
     return () => {
       unsubscribe("equipment_monitoring/status/" + machine.name)
-      unsubscribe("event_sm/" + machine.name+"/#")
+      unsubscribe("event_sm/" + machine.name + "/#")
       unsubscribe("status/" + machine.name + "/alive")
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   //todo: only add to event list if sent
-  const do_update = async (topic, payload,updated_event) => {
-   
+  const do_update = async (topic, payload, updated_event) => {
+
     if (!Array.isArray(topic))
       topic = [topic]
 
@@ -82,7 +82,7 @@ export function AutoPage({ config, machine_list }) {
 
     try {
       sendJsonMessage(topic, payload);
-      sendJsonMessage('event_sm/'+updated_event.machine_name+"/reason",updated_event)
+      sendJsonMessage('event_sm/' + updated_event.machine_name + "/reason", updated_event)
       add_toast(toast_dispatch, { header: "Sent" })
     }
     catch (err) {
@@ -102,7 +102,13 @@ export function AutoPage({ config, machine_list }) {
     setShowModal(false)
     let category = reasons.find(elem => elem.category_id === selected_category)
     let reason = category.reasons.find(elem => elem.id === id).text
-    do_update("reason", { machine_name: current_event.machine_name, timestamp: current_event.stop, status: reason },{...current_event,reason:reason})
+    do_update("reason", { machine_name: current_event.machine_name, timestamp: current_event.stop, status: reason }, { ...current_event, reason: reason })
+    setSelectedCategory(undefined)
+    setCurrentEvent(undefined)
+  }
+
+  const closeModal = () => {
+    setShowModal(false);
     setSelectedCategory(undefined)
     setCurrentEvent(undefined)
   }
@@ -121,7 +127,7 @@ export function AutoPage({ config, machine_list }) {
         </Card.Header>
         <Card.Body>
           <StatusBar status={machine_status} />
-          <EventLog current={current_event} events={event_list} config={config} handleEventClick={handleEventClick}/>
+          <EventLog current={current_event} events={event_list} config={config} handleEventClick={handleEventClick} />
         </Card.Body>
       </Card>
       <ReasonModal
@@ -129,12 +135,13 @@ export function AutoPage({ config, machine_list }) {
         handleClick={handleReasonClick}
         selected_category={selected_category}
         handleCategoryClick={(id) => setSelectedCategory(id)}
-        reason_set={reasons} />
+        reason_set={reasons}
+        close={closeModal} />
     </>
   }
 }
 
-function EventLog({ events, config, current,handleEventClick }) {
+function EventLog({ events, config, current, handleEventClick }) {
   if (current) {
     events = [current, ...events]
   }
@@ -275,10 +282,10 @@ function StatusBar({ status }) {
   </Container>
 }
 
-function ReasonModal({ show, handleClick, selected_category, handleCategoryClick, reason_set }) {
+function ReasonModal({ show, handleClick, selected_category, handleCategoryClick, reason_set,close }) {
 
   let category_modal = <> <Modal.Header className='text-center'>
-    <Modal.Title className="w-100">Reason Categories</Modal.Title>
+    <Modal.Title className="w-100">Reason Categories <Button variant='light' className='float-end' onClick={() => close()}>Close</Button></Modal.Title>
   </Modal.Header>
     <Modal.Body>
       <Row className='gx-2 gy-2'>
@@ -297,7 +304,7 @@ function ReasonModal({ show, handleClick, selected_category, handleCategoryClick
 
   let reason_modal = <>
     <Modal.Header className='text-center'>
-      <Modal.Title className="w-100">Reason for Category {chosen_category?.category_name} <Button variant='light' className='float-end' onClick={() => handleCategoryClick(null)}>Back</Button></Modal.Title>
+      <Modal.Title className="w-100">Reason for Category {chosen_category?.category_name} <Button variant='light' className='float-end' onClick={() => handleCategoryClick(undefined)}>Back</Button></Modal.Title>
     </Modal.Header>
     <Modal.Body>
       <Row className='gx-2 gy-2'>

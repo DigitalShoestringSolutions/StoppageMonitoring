@@ -18,6 +18,9 @@ class Category(models.Model):
 
     def __str__(self):
         return self.text
+    
+    class Meta:
+        verbose_name_plural = "categories"
 
 
 class Reason(models.Model):

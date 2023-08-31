@@ -1,0 +1,26 @@
+{
+  "location_page": {
+    "title": "Locations"
+  },
+  "capture_page": {
+    "fullscreen_modal": false,
+    "part_entry": "text",
+    "part_entry_options": [
+      "Gearbox",
+      "Buttons",
+      "Other"
+    ],
+    "clear_part_on_submit": true,
+    "event_log_length": 5
+  },
+  "reasons_api": {
+    "host": null,
+    "port": 8001
+  },
+  "mqtt": {
+    "host": null,
+    "port": 9001,
+    "prefix": [
+    ]
+  }
+}

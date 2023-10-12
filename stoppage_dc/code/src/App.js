@@ -125,7 +125,7 @@ function Base({ setMachineList, config }) {
         <Navbar sticky="top" bg="secondary" variant="dark" expand="md">
           <Container fluid>
             <Navbar.Brand href="/">
-              Shoestring Scrap Monitoring
+              Shoestring Downtime Monitoring
             </Navbar.Brand>
             <Navbar.Toggle aria-controls="basic-navbar-nav" className='mb-2' />
             <Navbar.Collapse id="basic-navbar-nav">

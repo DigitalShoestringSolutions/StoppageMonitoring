@@ -2,7 +2,7 @@
 import React from 'react'
 import { Container, Pagination, Card, Col, Row, Button, Modal, Table, Spinner, Form, DropdownButton, Dropdown } from 'react-bootstrap'
 import { useParams } from 'react-router-dom'
-import { useMQTTControl } from './MQTTContext';
+import { useMQTTControl, useMQTTState } from './MQTTContext';
 import APIBackend from './RestAPI'
 import * as dayjs from 'dayjs'
 import { useToastDispatch, add_toast } from "./ToastContext";
@@ -14,19 +14,30 @@ export function CapturePage({ config, machine_list }) {
   const machine_id = Number(params.machine_id)
   let machine = machine_list.find(elem => elem.id === machine_id)
 
-  const {sendJsonMessage} = useMQTTControl()
+  const { sendJsonMessage, subscribe } = useMQTTControl()
+  let { events, status } = useMQTTState();
+  let event_list = events[machine.name] ?? []
+  let machine_status = status[machine.name] ?? STATUS.disconnected
+
+
+  let [subscribed,setSubscribed] = React.useState(false)
 
   let [loaded, setLoaded] = React.useState(false)
   let [pending, setPending] = React.useState(false)
   let [error, setError] = React.useState(null)
   let [showModal, setShowModal] = React.useState(false);
-  let [status, setStatus] = React.useState(STATUS.stopped)
-  let [eventList, setEventList] = React.useState([])
   let [reasons, setReasons] = React.useState([])
   let [selected_category, setSelectedCategory] = React.useState(null)
   let [tmpEvent, setTmpEvent] = React.useState(null)
 
   let toast_dispatch = useToastDispatch()
+
+  React.useEffect(() => {
+    if (!subscribed) {
+      subscribe("manual_input/stoppages/" + machine.name+"/#")
+      setSubscribed(true)
+    }
+  }, [machine.name, subscribe, subscribed])
 
   React.useEffect(() => {
     let do_load = async () => {
@@ -48,19 +59,7 @@ export function CapturePage({ config, machine_list }) {
     }
   }, [loaded, pending, config, machine_id])
 
-  // const do_update = async (topic, payload) => { /*await ws_send({ topic: topic, payload: payload })*/ }
-
-  //todo: only add to event list if sent
   const do_update = async (topic, payload) => {
-    // if (event_type === STATUS.pass) {
-    //   reason = "pass";
-    // }
-
-    // let base_message = { part: part, operation: machine.name, outcome: event_type, count: 1 }
-
-    // base_message = { ...base_message, reason: reason }
-    // let timestamp = dayjs()
-
     if (!Array.isArray(topic))
       topic = [topic]
 
@@ -69,11 +68,8 @@ export function CapturePage({ config, machine_list }) {
     topic.unshift("manual_input");
 
 
-    // let payload = { ...base_message, timestamp: timestamp.format() }
-
     try {
-      sendJsonMessage(topic, payload);
-      // setEventList(prev => [{ ...base_message, timestamp: timestamp }, ...prev])
+      sendJsonMessage(topic, payload, 1, true);
       add_toast(toast_dispatch, { header: "Sent" })
     }
     catch (err) {
@@ -85,13 +81,11 @@ export function CapturePage({ config, machine_list }) {
   }
 
   const doSetStatus = (value) => {
-    setStatus(value)
     setShowModal(value === STATUS.stopped)
 
-
-    if (value === STATUS.running && tmpEvent) {
+    if (value === STATUS.running) {
       do_update(value, { machine_id: machine.id, machine_name: machine.name, running: true, timestamp: dayjs().format(), status: "Running" })
-      setEventList(prev => [{ ...tmpEvent, stop: dayjs() }, ...prev])
+      // setEventList(prev => [{ ...tmpEvent, stop: dayjs() }, ...prev])
       setTmpEvent(null)
     } else if (value === STATUS.stopped) {
       setTmpEvent({ start: dayjs() })
@@ -100,7 +94,6 @@ export function CapturePage({ config, machine_list }) {
 
   const handleReasonClick = (id) => {
     setShowModal(false)
-    console.log(selected_category, reasons)
     let category = reasons.find(elem => elem.category_id === selected_category)
     let reason = category.reasons.find(elem => elem.id === id).text
     setTmpEvent(prev => ({ ...prev, reason: reason }))
@@ -121,8 +114,8 @@ export function CapturePage({ config, machine_list }) {
           <h1>{machine?.name}</h1>
         </Card.Header>
         <Card.Body>
-          <ButtonBar status={status} setStatus={doSetStatus} />
-          <EventLog current={tmpEvent} events={eventList} config={config} />
+          <ButtonBar status={machine_status} setStatus={doSetStatus} />
+          <EventLog current={tmpEvent} events={event_list} config={config} />
         </Card.Body>
       </Card>
       <ReasonModal
@@ -136,17 +129,13 @@ export function CapturePage({ config, machine_list }) {
 }
 
 function EventLog({ events, config, current }) {
-  if (current) {
-    events = [current, ...events]
-  }
-
   const [active_page, setActive] = React.useState(1)
   let page_size = config?.capture_page?.event_log_length ?? 10
   page_size = Number(page_size)
   let n_pages = Math.ceil(events.length / page_size)
   n_pages = n_pages > 0 ? n_pages : 1
   let current_page_set = paginate(events, page_size, active_page)
-  
+
   return <Card className='mt-4 mx-2'>
     <PaginateWidget active={active_page} n_pages={n_pages} setPage={(number) => setActive(number)} />
     <Table bordered striped responsive="sm">
@@ -161,8 +150,8 @@ function EventLog({ events, config, current }) {
         {current_page_set.map((event, index) => (
           <tr key={index}>
             <td>{event.reason}</td>
-            <td>{event.start.format('DD/MM/YYYY HH:mm:ss')}</td>
-            <td>{event.stop ? dayjs.duration(event.stop.diff(event.start)).format('m[m] s[s]') : ""}</td>
+            <td>{dayjs(event.start).format('DD/MM/YYYY HH:mm:ss')}</td>
+            <td>{event.stop ? dayjs.duration(dayjs(event.stop).diff(dayjs(event.start))).format('m[m] s[s]') : ""}</td>
           </tr>
         ))}
       </tbody>
@@ -235,7 +224,6 @@ function PaginateWidget({ active, n_pages, setPage }) {
     if (n === -1 && active === scroll - 2) {
       n = -2
     }
-    // if (n >= 1 && n <= n_pages - show_limit + 1)
     doSetScroll(scroll + n)
   }
 
@@ -326,25 +314,3 @@ function ReasonModal({ show, handleClick, selected_category, handleCategoryClick
   </Modal>
 }
 
-// function EventLog({ events }) {
-//   return <Card className='mt-4 mx-2'>
-//     <Table bordered>
-//       <thead>
-//         <tr>
-//           <th>Reason</th>
-//           <th>Time</th>
-//           <th>Duration</th>
-//         </tr>
-//       </thead>
-//       <tbody>
-//         {events.map((event, index) => (
-//           <tr key={index}>
-//             <td>{event.reason}</td>
-//             <td>{event.start.format('DD/MM/YYYY HH:mm:ss')}</td>
-//             <td>{dayjs.duration(event.stop.diff(event.start)).format('m[m] s[s]')}</td>
-//           </tr>
-//         ))}
-//       </tbody>
-//     </Table>
-//   </Card>
-// }

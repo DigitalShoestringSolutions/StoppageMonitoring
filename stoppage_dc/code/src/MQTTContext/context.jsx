@@ -57,16 +57,23 @@ export const MQTTProvider = ({
   const [connecting, setConnecting] = React.useState(false)
   const [state, dispatch] = React.useReducer(reducer, initial_state);
   const [message_queue, setMessageQueue] = React.useState([])
+  const [send_queue, setSendQueue] = React.useState([])
   const [all_subbed, setAllSubbed] = React.useState(false)
   const [resub_ping, setReSubPing] = React.useState(false)
   const [sub_state, setSubState] = React.useState({})
   const [client, setClient] = React.useState(undefined)
   const [reset_substate, setResetSubstate] = React.useState(false)
 
+  const subscribe = React.useCallback((topic) => {
+    debug && console.log("Adding '" + topic + "' to subscription list")
+    setSubState((prev) => ({ ...prev, [topic]: SUB_STATE.unsubscribed }))
+    setAllSubbed(false)
+  }, [debug])
+
   React.useEffect(() => {
     // called when a message arrives
     function onMessageArrived(message) {
-      if(debug){ console.log("MQTT RCV: ", message.destinationName, message.payloadString);}
+      if (debug) { console.log("MQTT RCV: ", message.destinationName, message.payloadString); }
       setMessageQueue((old_queue) => ([...old_queue, { payload: JSON.parse(message.payloadString), topic: message.destinationName }]))
     }
 
@@ -91,10 +98,11 @@ export const MQTTProvider = ({
         // Once a connection has been made, make a subscription and send a message.
         console.log("onConnect", clientID);
         dispatch({ type: 'MQTT_STATUS', connected: true })
-        // subscriptions.forEach(topic => {
-        //   console.log("init subscribing to "+topic,clientID)
-        //   new_client.subscribe(topic);
-        // })
+
+        console.log("init subscribing to " + subscriptions)
+        subscriptions.forEach(topic => {
+          subscribe(topic);
+        })
 
         setConnected(true)
         setConnecting(false)
@@ -108,7 +116,7 @@ export const MQTTProvider = ({
       setConnecting(true)
       setClient(new_client)
     }
-  }, [connected, connecting, client, host, port, clientID, subscriptions, debug, sub_state])
+  }, [connected, connecting, client, host, port, clientID, subscriptions, debug, sub_state, subscribe])
 
   React.useEffect(() => {
     if (reset_substate) {
@@ -120,7 +128,7 @@ export const MQTTProvider = ({
     }
   }, [reset_substate, sub_state])
 
-  function sendJsonMessage(topic, payload) {
+  function sendJsonMessage(topic, payload, qos = 0, retained = false) {
     //add timestamp to message if not present
     payload = { timestamp: dayjs().format(), ...payload }
     //ensure topic is wrapped in array
@@ -129,19 +137,28 @@ export const MQTTProvider = ({
     //form strings
     const payload_string = JSON.stringify(payload)
     const topic_string = [...prefix, ...topic].join("/")
-    if(debug){console.log("MQTT SEND: ", payload_string, " TO ", topic_string);}
+    if (debug) { console.log("MQTT SEND QUEUE: ", payload_string, " TO ", topic_string); }
 
     let message = new Paho.Message(payload_string);
     message.destinationName = topic_string;
-    client.send(message);
+    message.qos = qos;
+    message.retained = retained;
+
+    // client.send(message);
+    setSendQueue((prev) => ([...prev, message]))
   }
 
   React.useEffect(() => {
-    // console.log("c", connected)
-    // console.log("cc", client && client.isConnected())
-    // console.log("as", all_subbed)
-    // console.log("ss", sub_state)
+    if (send_queue.length > 0 && connected && client.isConnected()) {
+      send_queue.forEach((message) => {
+        if (debug) { console.log("MQTT SEND: ", message.payloadString, " TO ", message.topic); }
+        client.send(message)
+      })
+      setSendQueue([])
+    }
+  }, [client, connected, debug, send_queue])
 
+  React.useEffect(() => {
     if (connected && client && client.isConnected() && !all_subbed) {
       let tmp_all_subbed = true
       for (let [topic, state] of Object.entries(sub_state)) {
@@ -173,17 +190,12 @@ export const MQTTProvider = ({
     }
   }, [client, connected, sub_state, all_subbed, resub_ping])
 
-  function subscribe(topic) {
-    debug && console.log("Adding '" + topic + "' to subscription list")
-    setSubState((prev) => ({ ...prev, [topic]: SUB_STATE.unsubscribed }))
-    setAllSubbed(false)
-  }
 
   function unsubscribe(topic) {
     /*debug &&*/ console.log("Unsubscribing from '" + topic + "'")
     if (sub_state[topic]) {
       client.unsubscribe(topic)
-      let new_substate = {...sub_state}
+      let new_substate = { ...sub_state }
       delete new_substate[topic]
       setSubState(new_substate)
     }

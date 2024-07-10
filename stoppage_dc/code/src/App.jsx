@@ -9,7 +9,7 @@ import { ToastProvider } from './ToastContext'
 import APIBackend from './RestAPI'
 import { CapturePage } from './ManualCapturePage';
 import { AutoPage } from './AutoCapturePage'
-import { new_message_action, reducer } from './MQTTConfig';
+import { new_message_action, custom_reducer, initial_state } from './custom_mqtt';
 
 dayjs.extend(duration);
 
@@ -51,8 +51,8 @@ function App() {
         port={config?.mqtt?.port ?? 9001}
         prefix={config?.mqtt?.prefix ?? []}
         new_message_action={new_message_action}
-        reducer={reducer}
-        initial_state={{ events: {}, status: {} }}
+        reducer={custom_reducer}
+        initial_state={initial_state}
       // debug={true}
       >
         <ToastProvider position='bottom-center'>

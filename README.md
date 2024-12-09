@@ -1,5 +1,7 @@
 # DowntimeMonitoring
 ## Build
+Run the `./setup_keys.sh` script  
+
 Build using docker: `docker compose build`
 ## Run
 Run using the `start.sh` script

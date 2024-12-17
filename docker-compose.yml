@@ -106,6 +106,10 @@ services:
         restart: unless-stopped
         depends_on:
             - "mqtt_broker"
+
+include:
+    - sensing/docker-compose.yml
+
 networks:
     internal:
       name: shoestring-internal

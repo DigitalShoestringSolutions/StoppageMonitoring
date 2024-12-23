@@ -149,7 +149,7 @@ function EventLog({ events, config, current }) {
       <tbody>
         {current_page_set.map((event, index) => (
           <tr key={index}>
-            <td>{dayjs(event.start).format('DD/MM/YYYY HH:mm:ss')} + "to" + {dayjs(event.stop).format('DD/MM/YYYY HH:mm:ss')}</td>
+            <td>{dayjs(event.start).format('DD/MM/YYYY HH:mm:ss')} to {dayjs(event.stop).format('DD/MM/YYYY HH:mm:ss')}</td>
             <td>{event.stop ? dayjs.duration(dayjs(event.stop).diff(dayjs(event.start))).format('m[m] s[s]') : ""}</td>
             <td>{event.reason}</td>
           </tr>

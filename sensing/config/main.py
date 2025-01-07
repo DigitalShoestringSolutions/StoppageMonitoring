@@ -14,7 +14,7 @@ import time
 
 # Local imports
 from utilities.mqtt_out import publish
-from hardware.ICs.sequent_16inputs import Sequent16inputsHAT
+from hardware.ICs.sequent_16inputs import Sequent16inputsHAT, Sequent8inputsHAT
 
 ## --------------------------------------------------------------------------------
 
@@ -34,7 +34,7 @@ machines = (
 # Timing
 sample_interval = 5 # seconds between reporting on each machine
 
-# Hardware input interface
+# Hardware input interface. Use either Sequent16inputsHAT() or Sequent8inputsHAT()
 input_interface = Sequent16inputsHAT(0)
 
 ## --------------------------------------------------------------------------------

@@ -141,17 +141,17 @@ function EventLog({ events, config, current }) {
     <Table bordered striped responsive="sm">
       <thead>
         <tr>
-          <th>Reason</th>
-          <th>Time</th>
+          <th>Downtime</th>
           <th>Duration</th>
+          <th>Reason</th>
         </tr>
       </thead>
       <tbody>
         {current_page_set.map((event, index) => (
           <tr key={index}>
-            <td>{event.reason}</td>
-            <td>{dayjs(event.start).format('DD/MM/YYYY HH:mm:ss')}</td>
+            <td>{dayjs(event.stop).format('DD/MM/YYYY HH:mm:ss')} to {dayjs(event.start).format('DD/MM/YYYY HH:mm:ss')}</td>
             <td>{event.stop ? dayjs.duration(dayjs(event.stop).diff(dayjs(event.start))).format('m[m] s[s]') : ""}</td>
+            <td>{event.reason}</td>
           </tr>
         ))}
       </tbody>

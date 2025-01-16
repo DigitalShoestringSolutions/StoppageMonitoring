@@ -158,7 +158,7 @@ function EventLog({ events, config, current, handleEventClick }) {
     <Table bordered striped responsive="sm">
       <thead>
         <tr>
-          <th>Time</th>
+          <th>Downtime</th>
           <th>Duration</th>
           <th>Reason</th>
         </tr>
@@ -166,8 +166,8 @@ function EventLog({ events, config, current, handleEventClick }) {
       <tbody>
         {current_page_set.map((event, index) => (
           <tr key={index}>
-            <td>{dayjs(event.stop).format('DD/MM/YYYY HH:mm:ss')}</td>
-            <td>{event.duration ? dayjs.duration(event.duration).format('m[m] s[s]') : ""}</td>
+            <td>{dayjs(event.stop).format('DD/MM/YYYY HH:mm:ss')} to {dayjs(event.start).format('DD/MM/YYYY HH:mm:ss')}</td>
+            <td>{event.duration ? dayjs.duration(event.duration).minutes() : ""}m {Math.round(dayjs.duration(event.duration).seconds())}s</td>
             <td>{event.reason ? event.reason : <Button onClick={() => handleEventClick(event)}>Set</Button>}</td>
           </tr>
         ))}
